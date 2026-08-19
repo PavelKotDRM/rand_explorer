@@ -4,6 +4,7 @@ use std::time::Instant;
 
 use eframe::{egui, App as EguiApp};
 use egui::{Align, Color32, ComboBox, Frame, Layout, Panel, RichText, Slider, Window};
+use egui_extras::syntax_highlighting::{CodeTheme, code_view_ui};
 use egui_plot::{Bar, BarChart, Line, Plot, PlotPoints};
 use plotly::{Plot as PlotlyPlot, Scatter};
 use rand::distr::{weighted::WeightedIndex, Bernoulli, Distribution, Uniform};
@@ -326,25 +327,29 @@ impl App {
 
     fn render_code_example(&self, ui: &mut egui::Ui) {
         let (title, source) = Self::code_example(self.active_tab);
+        let mut theme = CodeTheme::from_memory(ui.ctx(), ui.style());
+
         ui.collapsing(format!("Rust example: {title}"), |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Copy").clicked() {
                     ui.ctx().copy_text(source.to_owned());
                 }
                 ui.label("Source code");
-            });
-            let mut code = source.to_owned();
-            egui::ScrollArea::both()
-                .max_height(260.0)
-                .auto_shrink([false, false])
-                .show(ui, |ui| {
-                    ui.add(
-                        egui::TextEdit::multiline(&mut code)
-                            .font(egui::TextStyle::Monospace)
-                            .desired_rows(8)
-                            .desired_width(f32::INFINITY),
-                    );
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    theme.ui(ui);
                 });
+            });
+
+            let frame = Frame::group(ui.style()).inner_margin(egui::Margin::same(8));
+            frame.show(ui, |ui| {
+                egui::ScrollArea::both()
+                    .max_height(260.0)
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        code_view_ui(ui, &theme, source, "rs");
+                    });
+            });
+            theme.store_in_memory(ui.ctx());
         });
     }
 
@@ -500,6 +505,7 @@ impl App {
 
     fn render_primitives(&mut self, ui: &mut egui::Ui) {
         ui.heading("Primitive generation");
+        self.render_code_example(ui);
 
         ui.horizontal(|ui| {
             ui.label("Sample count");
@@ -565,6 +571,7 @@ impl App {
 
     fn render_ranges(&mut self, ui: &mut egui::Ui) {
         ui.heading("Range exploration");
+        self.render_code_example(ui);
         ui.horizontal(|ui| {
             ui.label("Start");
             ui.add(egui::DragValue::new(&mut self.state.range_bounds.start).speed(0.1));
@@ -600,6 +607,7 @@ impl App {
 
     fn render_distributions(&mut self, ui: &mut egui::Ui) {
         ui.heading("Distributions");
+        self.render_code_example(ui);
         ui.horizontal(|ui| {
             ComboBox::from_id_salt("dist-kind")
                 .selected_text(match self.state.distribution.kind {
@@ -690,6 +698,7 @@ impl App {
 
     fn render_sequences(&mut self, ui: &mut egui::Ui) {
         ui.heading("Sequences and iterators");
+        self.render_code_example(ui);
         ui.horizontal(|ui| {
             ui.label("Choose count");
             ui.add(Slider::new(&mut self.state.sequence.choose_count, 1..=8));
@@ -770,6 +779,7 @@ impl App {
 
     fn render_engines(&mut self, ui: &mut egui::Ui) {
         ui.heading("RNG engines and determinism");
+        self.render_code_example(ui);
         ui.horizontal(|ui| {
             ComboBox::from_id_salt("rng-kind")
                 .selected_text(format!("{:?}", self.state.engine))
@@ -846,6 +856,7 @@ impl App {
 
     fn render_system(&mut self, ui: &mut egui::Ui) {
         ui.heading("System and build info");
+        self.render_code_example(ui);
         ui.horizontal(|ui| {
             if ui.button("Save preset").clicked() {
                 self.save_preset();
@@ -977,8 +988,6 @@ impl EguiApp for App {
             egui::ScrollArea::vertical()
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
-                    self.render_code_example(ui);
-                    ui.separator();
                     self.render_tab_buttons(ui);
                     ui.separator();
                     match self.active_tab {
