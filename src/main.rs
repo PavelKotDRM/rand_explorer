@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use rand_explorer::App;
 
 fn main() -> eframe::Result<()> {

@@ -11,6 +11,10 @@ use rand::RngExt;
 use super::{actions::random_arrow_sequence, examples::code_example, ActiveTab, App};
 
 impl App {
+    fn adaptive_height(ui: &egui::Ui, fraction: f32, min: f32, max: f32) -> f32 {
+        (ui.available_height() * fraction).clamp(min, max)
+    }
+
     pub(super) fn render_tab_buttons(&mut self, ui: &mut egui::Ui) {
         ui.horizontal_wrapped(|ui| {
             for tab in [
@@ -60,7 +64,7 @@ impl App {
             let frame = Frame::group(ui.style()).inner_margin(egui::Margin::same(8));
             frame.show(ui, |ui| {
                 egui::ScrollArea::both()
-                    .max_height(260.0)
+                    .max_height(Self::adaptive_height(ui, 0.28, 180.0, 360.0))
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
                         code_view_ui(ui, &theme, source, "rs");
@@ -121,7 +125,7 @@ impl App {
         ui.separator();
         ui.group(|ui| {
             egui::ScrollArea::both()
-                .max_height(360.0)
+                .max_height(Self::adaptive_height(ui, 0.48, 220.0, 560.0))
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     egui::Grid::new("primitive-grid").show(ui, |ui| {
@@ -253,7 +257,12 @@ impl App {
                 })
                 .collect();
             let pdf = Line::new("theoretical PDF", pdf_points).color(Color32::LIGHT_RED);
-            let plot = Plot::new("distribution_plot").height(240.0).show_axes([true, true]).show_grid(true);
+            let plot_height = Self::adaptive_height(ui, 0.58, 220.0, 520.0);
+            let plot = Plot::new("distribution_plot")
+                .height(plot_height)
+                .show_axes([true, true])
+                .show_grid(true)
+                .legend(egui_plot::Legend::default());
             plot.show(ui, |plot_ui| {
                 plot_ui.bar_chart(histogram);
                 plot_ui.line(pdf);
@@ -411,16 +420,21 @@ impl App {
         ));
         if !self.state.benchmark.stream_a.is_empty() {
             ui.collapsing("Compare streams", |ui| {
-                egui::Grid::new("determinism-grid").show(ui, |ui| {
-                    ui.label("A");
-                    ui.label("B");
-                    ui.end_row();
-                    for (left, right) in self.state.benchmark.stream_a.iter().zip(&self.state.benchmark.stream_b) {
-                        ui.monospace(left.to_string());
-                        ui.monospace(right.to_string());
-                        ui.end_row();
-                    }
-                });
+                egui::ScrollArea::vertical()
+                    .max_height(Self::adaptive_height(ui, 0.42, 180.0, 480.0))
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        egui::Grid::new("determinism-grid").show(ui, |ui| {
+                            ui.label("A");
+                            ui.label("B");
+                            ui.end_row();
+                            for (left, right) in self.state.benchmark.stream_a.iter().zip(&self.state.benchmark.stream_b) {
+                                ui.monospace(left.to_string());
+                                ui.monospace(right.to_string());
+                                ui.end_row();
+                            }
+                        });
+                    });
             });
         }
     }

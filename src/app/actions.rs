@@ -1,7 +1,11 @@
 use std::fs;
 use std::process::Command;
 
-use plotly::{Plot as PlotlyPlot, Scatter};
+use plotly::{
+    common::{HoverInfo, Mode},
+    histogram::{Bins, HistNorm},
+    layout::Axis, Configuration, Layout, Plot as PlotlyPlot, Scatter,
+};
 use rand::distr::{weighted::WeightedIndex, Bernoulli, Distribution, Uniform};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
@@ -60,13 +64,45 @@ impl App {
 
     pub(super) fn open_plotly_distribution(&self) {
         let values = self.state.distribution.values.clone();
-        let x_values: Vec<f64> = (0..values.len()).map(|idx| idx as f64).collect();
+        if values.is_empty() {
+            return;
+        }
+
+        let min = values.iter().copied().fold(f64::INFINITY, f64::min);
+        let max = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let bin_count = ((values.len() as f64).sqrt() as usize).clamp(8, 64);
+        let width = ((max - min) / bin_count as f64).max(f64::EPSILON);
 
         let mut plot = PlotlyPlot::new();
-        plot.add_trace(Scatter::new(x_values, values).mode(plotly::common::Mode::Lines));
-        plot.set_layout(
-            plotly::Layout::new().title(plotly::common::Title::with_text("rand_explorer distribution")),
+        plot.add_trace(
+            plotly::Histogram::new(values.clone())
+                .hist_norm(HistNorm::ProbabilityDensity)
+                .x_bins(Bins::new(min, max, width)),
         );
+
+        let pdf_x: Vec<f64> = (0..=200)
+            .map(|index| min + (max - min) * index as f64 / 200.0)
+            .collect();
+        let pdf_y: Vec<f64> = pdf_x
+            .iter()
+            .copied()
+            .map(|x| self.distribution_pdf(x).unwrap_or(0.0))
+            .collect();
+        plot.add_trace(
+            Scatter::new(pdf_x, pdf_y)
+                .name("Theoretical PDF")
+                .mode(Mode::Lines)
+                .hover_info(HoverInfo::XAndY),
+        );
+        plot.set_layout(
+            Layout::new()
+                .title(plotly::common::Title::with_text("rand_explorer distribution"))
+                .x_axis(Axis::new().title(plotly::common::Title::with_text("Value")))
+                .y_axis(Axis::new().title(plotly::common::Title::with_text("Probability density")))
+                .auto_size(true)
+                .margin(plotly::layout::Margin::new().left(70).right(24).top(64).bottom(64)),
+        );
+        plot.set_configuration(Configuration::new().responsive(true).display_logo(false));
 
         let path = std::env::temp_dir().join("rand_explorer_distribution_plot.html");
         plot.write_html(path.to_string_lossy().as_ref());
