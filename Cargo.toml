@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 eframe = { version = "0.36", default-features = false, features = ["glow", "default_fonts"] }
 egui = "0.36"
-egui_extras = { version = "0.36", features = ["syntect"] }
 egui_plot = "0.37"
 plotly = "0.14"
 rand = "0.10"

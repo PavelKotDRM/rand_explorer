@@ -1,8 +1,7 @@
 use std::time::Instant;
 
 use eframe::egui;
-use egui::{Color32, ComboBox, Frame, Layout, Slider};
-use egui_extras::syntax_highlighting::{CodeTheme, code_view_ui};
+use egui::{Color32, ComboBox, Frame, Slider};
 use egui_plot::{Bar, BarChart, Line, Plot, PlotPoints};
 use rand::distr::Distribution;
 use rand::prelude::{IndexedRandom, SliceRandom};
@@ -48,7 +47,6 @@ impl App {
 
     pub(super) fn render_code_example(&self, ui: &mut egui::Ui) {
         let (title, source) = code_example(self.active_tab);
-        let mut theme = CodeTheme::from_memory(ui.ctx(), ui.style());
 
         ui.collapsing(format!("Rust example: {title}"), |ui| {
             ui.horizontal(|ui| {
@@ -56,9 +54,6 @@ impl App {
                     ui.ctx().copy_text(source.to_owned());
                 }
                 ui.label("Source code");
-                ui.with_layout(Layout::right_to_left(egui::Align::Center), |ui| {
-                    theme.ui(ui);
-                });
             });
 
             let frame = Frame::group(ui.style()).inner_margin(egui::Margin::same(8));
@@ -67,10 +62,14 @@ impl App {
                     .max_height(Self::adaptive_height(ui, 0.28, 180.0, 360.0))
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        code_view_ui(ui, &theme, source, "rs");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut source.to_owned())
+                                .font(egui::TextStyle::Monospace)
+                                .code_editor()
+                                .desired_width(f32::INFINITY),
+                        );
                     });
             });
-            theme.store_in_memory(ui.ctx());
         });
     }
 
