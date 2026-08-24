@@ -36,6 +36,51 @@ An interactive, GPU-accelerated desktop application written in Rust using egui t
 cargo run --release
 ```
 
+### Code Quality Checks (Rust)
+
+Baseline checks before creating a PR:
+
+```bash
+# 1) Check formatting (without changing files)
+cargo fmt --all -- --check
+
+# 2) Run lints and fail on warnings
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+# 3) Run tests
+cargo test --workspace --all-features
+
+# 4) Build docs and treat warnings as errors
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
+```
+
+Quick local fix for formatting:
+
+```bash
+cargo fmt --all
+```
+
+Security and dependency checks (recommended):
+
+```bash
+# Install once
+cargo install cargo-audit cargo-deny cargo-outdated cargo-udeps
+
+# 1) Security advisories (RustSec)
+cargo audit
+
+# 2) Policy checks: licenses, advisories, bans, sources
+cargo deny check
+
+# 3) Outdated dependencies report
+cargo outdated --workspace
+
+# 4) Detect unused dependencies
+cargo +nightly udeps --workspace --all-targets
+```
+
+Note: there is no finite "all possible tools" list in Rust. The commands above cover the most common practical set: style, linting, tests, docs, security, and dependency hygiene.
+
 ---
 
 ## Project Structure
