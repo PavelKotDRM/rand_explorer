@@ -1,5 +1,7 @@
 # rand_explorer
 
+[Russian version](docs/README.ru.md)
+
 An interactive, GPU-accelerated desktop application written in Rust using egui to explore, visualize, and benchmark the capabilities of the rand crate ecosystem.
 
 ---
@@ -19,7 +21,7 @@ An interactive, GPU-accelerated desktop application written in Rust using egui t
 
 * GUI Framework: egui / eframe
 * Graphics Backend: OpenGL via glow
-* Core Engine: rand 0.9+
+* Core Engine: rand 0.10+
 
 ---
 
@@ -91,10 +93,12 @@ rand_explorer/
 ├── src/
 │   ├── main.rs
 │   ├── lib.rs
-│   ├── app.rs
+│   ├── app/
 │   ├── build_info.rs
-│   ├── state.rs
+│   ├── state/
 │   └── tabs/
+├── docs/
+│   └── README.ru.md
 ├── Cargo.toml
 ├── README.md
 ├── LICENSE
