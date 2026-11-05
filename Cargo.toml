@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-eframe = { version = "0.36", default-features = false, features = ["glow", "default_fonts"] }
-egui = "0.36"
-egui_plot = "0.37"
+eframe = { version = "0.37", default-features = false, features = ["glow", "default_fonts", "clipboard"] }
+egui = "0.37"
+egui_plot = "0.38"
 plotly = "0.14"
 rand = "0.10"
 rand_core = "0.10"
